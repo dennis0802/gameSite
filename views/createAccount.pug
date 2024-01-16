@@ -1,0 +1,43 @@
+html 
+    head 
+        link(rel='stylesheet', type='text/css', href='/static/css/style.css')
+        link(rel='icon', type='image/x-icon', href='/static/img/favicon.ico')
+        title=title 
+    body 
+        div#navbar
+            a#logo(href='/')
+                img(src='/static/img/logo.png', width=60, height=40)
+            div#navbar-right
+                a(href='/') Home
+                a(href='/games') Games
+                if loggedIn
+                    a(href='/accountPage') Your Account
+                else 
+                    a.active(href='/login') Login
+        div#content
+            h1=title
+            if errors
+                p.error Please correct the following errors before re-submitting!
+                ul
+                    each val in errors 
+                        li.error=val
+            a(href="/login") Back to Login Menu
+            br
+            br
+            form(method="post")
+                label(for="username") Username should be between 4-25 characters long and include at least one number. No special characters.
+                br
+                input(type="text", name="username", value=username)
+                br
+                br
+                label(for="password") Password should be at least 12 characters and include at least one uppercase, one lowercase, one number, and a symbol.
+                br
+                input(type="password", name="password")
+                br
+                br
+                label(for="passwordConfirm") Confirm password.
+                br
+                input(type="password", name="passwordConfirm")
+                br
+                br
+                input(type="submit" name="submit" value="Login")

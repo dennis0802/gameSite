@@ -1,0 +1,16 @@
+html 
+    head 
+        link(rel='stylesheet', type='text/css', href='/static/css/style.css')
+        link(rel='icon', type='image/x-icon', href='/static/img/favicon.ico')
+        title=title 
+    body 
+        div#navbar
+            a#logo(href='/')
+                img(src='/static/img/logo.png', width=60, height=40)
+            div#navbar-right
+                a(href='/') Home
+                a(href='/games') Games
+                a(href='/login') Login
+        div#content
+            h1 Error 
+            p=message

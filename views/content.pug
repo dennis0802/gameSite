@@ -1,0 +1,42 @@
+html 
+    head 
+        link(rel='stylesheet', type='text/css', href='/static/css/style.css')
+        link(rel='icon', type='image/x-icon', href='/static/img/favicon.ico')
+        title=title 
+    body 
+        div#navbar
+            a#logo(href='/')
+                img(src='/static/img/logo.png', width=60, height=40)
+            div#navbar-right
+                a(href='/') Home
+                a.active(href='/games') Games
+                if loggedIn
+                    a(href='/accountPage') Your Account
+                else 
+                    a(href='/login') Login
+        div#content
+            table
+                tr 
+                    th Name 
+                    th Genre
+                    th Rating 
+                    th Timeline
+                    th
+                    th
+                tr 
+                    td content here
+                    td content here 
+                    td content here 
+                    td content here
+                    td Edit 
+                    td Delete
+            if isAdmin && isGame
+                br
+                br
+                button
+                    a(class="button buttonTheme" href='/addGame') Add Game
+            else if isAdmin && isOnUsers
+                br
+                br
+                button
+                    a(class="button buttonTheme" href='/addUser') Add User     

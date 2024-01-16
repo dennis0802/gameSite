@@ -1,0 +1,32 @@
+html 
+    head 
+        link(rel='stylesheet', type='text/css', href='/static/css/style.css')
+        link(rel='icon', type='image/x-icon', href='/static/img/favicon.ico')
+        title=title 
+    body 
+        div#navbar
+            a#logo(href='/')
+                img(src='/static/img/logo.png', width=60, height=40)
+            div#navbar-right
+                a(href='/') Home
+                a(href='/games') Games
+                a.active(href='/login') Login
+        div#content
+            h1=loginMessage
+            if error
+                p.error #{error}
+            a(href="/login") Back to Login Menu
+            br
+            br
+            form(method="post")
+                label(for="username") Username 
+                br
+                input(type="text", name="username", value=username)
+                br
+                br
+                label(for="password") Password
+                br
+                input(type="password", name="password")
+                br
+                br
+                input(type="submit" name="submit" value="Login")

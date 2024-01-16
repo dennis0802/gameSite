@@ -1,0 +1,29 @@
+html 
+    head 
+        link(rel='stylesheet', type='text/css', href='/static/css/style.css')
+        link(rel='icon', type='image/x-icon', href='/static/img/favicon.ico')
+        title=title 
+    body 
+        div#navbar
+            a#logo(href='/')
+                img(src='/static/img/logo.png', width=60, height=40)
+            div#navbar-right
+                a(href='/') Home
+                a(href='/games') Games
+                a.active(href='/login') Login
+        div#content
+            h1 Select a Login
+            button 
+                a(class="button buttonTheme" href='/loginAdmin') Admin Login 
+            br
+            br
+            button 
+                a(class="button buttonTheme" href='/loginUser') User Login
+            br
+            br
+            button 
+                a(class="button buttonTheme" href='/createAccount') Create User Account 
+            br
+            br
+            button 
+                a(class="button buttonTheme" href='/forgot') Forgot User Password?
