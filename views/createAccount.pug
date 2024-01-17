@@ -25,19 +25,44 @@ html
             br
             br
             form(method="post")
-                label(for="username") Username should be between 4-25 characters long and include at least one number. No special characters.
+                label(for="username") Username should be between 4-25 characters long and include at least one number. No special characters:
                 br
                 input(type="text", name="username", value=username)
                 br
                 br
-                label(for="password") Password should be at least 12 characters and include at least one uppercase, one lowercase, one number, and a symbol.
+
+                label(for="password") Password should be at least 12 characters and include at least one uppercase, one lowercase, one number, and a symbol:
                 br
                 input(type="password", name="password")
                 br
                 br
-                label(for="passwordConfirm") Confirm password.
+
+                label(for="passwordConfirm") Confirm Password:
                 br
                 input(type="password", name="passwordConfirm")
                 br
                 br
-                input(type="submit" name="submit" value="Login")
+
+                label(for="email") Email:
+                br
+                input(type="text", name="email", value=email)
+                br
+                br
+
+                label(for="secQuestion") Security Question:
+                br
+                select(name="secQuestion")
+                    option(value="Select a question..." selected) Select a question...
+                    option(value="The name of your first pet?") The name of your first pet?
+                    option(value="Make and model of your first car?") Make and model of your first car?
+                    option(value="What city did you want to grow up in") What city did you want to grow up in?
+                br
+                br
+
+                label(for="answer") Answer:
+                br
+                input(type="text", name="answer")
+                br
+                br
+
+                input(type="submit" name="submit" value="Create Account")

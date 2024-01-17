@@ -1,0 +1,54 @@
+html 
+    head 
+        link(rel='stylesheet', type='text/css', href='/static/css/style.css')
+        link(rel='icon', type='image/x-icon', href='/static/img/favicon.ico')
+        title=title 
+    body 
+        div#navbar
+            a#logo(href='/')
+                img(src='/static/img/logo.png', width=60, height=40)
+            div#navbar-right
+                a(href='/') Home
+                a(href='/games') Games
+                a.active(href='/login') Login
+        div#content
+            h1=title
+            if errors
+                p.error Please correct the following errors before re-submitting!
+                ul
+                    each val in errors 
+                        li.error=val
+            a(href="/login") Back to Login Menu
+            br
+            br
+            form(method="post")
+
+                if emailPhase
+                    label(for="email") Please enter the email you used to create your account:
+                    br
+                    input(type="text", name="email", value=email)
+                    br
+                    br
+                    input(type="submit" name="submit" value="Search for Account")
+                else if answerPhase 
+                    label(for="answer") Please enter the answer to the security question:
+                    p=question
+                    input(type="text", name="answer", value=answer)
+                    br
+                    br
+                    input(type="submit" name="submit" value="Submit Answer")
+                else if passwordPhase
+                    label(for="password") New password should be at least 12 characters and include at least one uppercase, one lowercase, one number, and a symbol:
+                    br
+                    input(type="password", name="password")
+                    br
+                    br
+
+                    label(for="passwordConfirm") Confirm New Password:
+                    br
+                    input(type="password", name="passwordConfirm")
+                    br
+                    br
+                    input(type="submit" name="submit" value="Submit Answer")
+
+                

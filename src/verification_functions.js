@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt';
+import { findUser, findUserByEmail } from './db_functions.js';
 
 export const isPasswordInvalid = async function(password, passwordConfirmation){
     let errors=[];
@@ -101,4 +102,60 @@ export const isUserNameInvalid = function(username){
         return errors
     }
     return false;
+}
+
+export const isEmailInvalid = function(email){
+    let pattern=/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+    let validEmail = pattern.test(email);
+    let errors=[];
+
+    if(!validEmail){
+        errors.push("Email must be a valid email address!");
+    }
+
+    // Check uniqueness
+
+    if(errors.length !== 0){
+        return errors;
+    }
+    return false;
+}
+
+export const isUserNameUnique = async function(username){
+    let result = await findUser(username).then(res => {
+        return res;
+    })
+
+    return result;
+}
+
+export const isEmailUnique = async function(email){
+    let result = await findUserByEmail(email).then(res => {
+        return res;
+    })
+    return result;
+}
+
+export const encryptAnswer = async function(answer){
+    let mainHash;
+
+    mainHash = await bcrypt.hash(answer, 10).then(hash => {
+        return hash;
+    })
+    .catch(err => {
+        console.log(err);
+    })
+
+    return mainHash;
+}
+
+export const verifyAnswer = async function(answer, hashFound){
+    const answerExists = await bcrypt.compare(answer, hashFound).then(res=>{
+        return res;
+    })
+    .catch(err => {
+        console.log(err);
+    })
+
+    return answerExists;
 }
