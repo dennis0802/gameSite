@@ -1,0 +1,64 @@
+html 
+    head 
+        link(rel='stylesheet', type='text/css', href='/static/css/style.css')
+        link(rel='icon', type='image/x-icon', href='/static/img/favicon.ico')
+        title=title 
+    body 
+        div#navbar
+            a#logo(href='/')
+                img(src='/static/img/logo.png', width=60, height=40)
+            div#navbar-right
+                a(href='/') Home
+                if isGame
+                    a.active(href='/games') Games
+                else 
+                    a(href="/games") Games
+
+                if loggedIn
+                    a(href='/accountPage') Your Account
+                else if selfRequest 
+                    a.active(href='/accountPage') Your Account
+                else 
+                    a(href='/login') Login
+        div#content
+            if errors
+                p.error Please correct the following errors before re-submitting!
+                p.error=errors
+            if !selfRequest
+                if isReset
+                    h1 Reset #{name}
+                    p Are you sure you want to reset account #{name}?
+                else if isOnUser 
+                    h1 Delete #{name}
+                    p Are you sure you want to delete account #{name}?
+                else
+                    h1 Delete #{result.name}
+                    p Are you sure want to delete #{result.name}? This cannot be undone!
+
+                button 
+                    if isGame
+                        a(class="button buttonTheme" href='/games') Back to Games
+                    else
+                        a(class="button buttonTheme" href='/users') Back to Users 
+                br
+                br
+                form(method="post")
+                    if isReset 
+                        input(type="submit" name="submit" value="Reset User")
+                    else if isGame
+                        input(type="submit" name="submit" value="Delete Game")
+                    else 
+                        input(type="submit" name="submit" value="Delete User")
+            else
+                if errors
+                    p.error Please correct the following errors before re-submitting!
+                    p.error=errors 
+                h1=title
+                p Are you sure you want to delete your account? This cannot be undone!
+                
+                button 
+                    a(class="button buttonTheme" href='/accountPage') Back to Account
+                br
+                br
+                form(method="post")
+                    input(type="submit" name="submit" value="Delete Account")

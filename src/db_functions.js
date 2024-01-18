@@ -74,7 +74,7 @@ export async function findUser(username, userType="All"){
         // Query for the user
         const query = userType === "All" ? {username: username} : {username: username, userType: userType};
         const options = {
-            projection: {_id: 0, username: 1, password: 1},
+            projection: {_id: 1, username: 1, password: 1, email: 1},
         }
 
         const user = await users.findOne(query, options);
@@ -140,6 +140,98 @@ export async function getUserType(username){
     }
     finally{
         //await client.close();
+    }
+}
+
+// Find game by id
+export async function findUserById(id){
+    try{
+        const database = client.db("game_site");
+        const users = database.collection("users");
+        let objectId = new ObjectId(id);
+
+        // Query for the game
+        const query = {_id: objectId}
+        const options = {
+            projection: {_id: 0, username:1, email:1}
+        }
+
+        const user = await users.findOne(query, options);
+        return user;
+    }
+    finally{
+
+    }
+}
+
+export async function deleteUser(id){
+    try{
+        const database = client.db("game_site");
+        const users = database.collection("users");
+
+        let objectId = new ObjectId(id);
+        const query = {_id: objectId}
+        const result = await users.deleteOne(query)
+
+        if(result.deletedCount === 1){
+            console.log("A document has been deleted.");
+        }
+        else{
+            console.log("No match.")
+        }
+    }
+    finally{
+
+    }
+}
+
+// Update game
+export async function updateUser(id, username, password, email, question, answer, userType, passwordFlag, questionFlag){
+    try{
+        const database = client.db("game_site");
+        const users = database.collection("users");
+        let doc;
+
+        if(passwordFlag && questionFlag){
+            doc = {
+                username: username,
+                password: password,
+                question: question,
+                email: email,
+                answer: answer,
+            }
+        }
+        else if(!passwordFlag && questionFlag){
+            doc = {
+                username: username,
+                question: question,
+                email: email,
+                answer: answer,
+            }
+        }
+        else if(passwordFlag && !questionFlag){
+            doc = {
+                username: username,
+                password: password,
+                email: email,
+            }
+        }
+        else{
+            doc = {
+                username: username,
+                email: email,
+            }
+        }
+
+        let objectId = new ObjectId(id);
+        const result = await users.updateOne(
+            {"_id": objectId},
+            { $set: doc}
+        )
+        console.log(result);
+    }
+    finally{
+
     }
 }
 
@@ -276,3 +368,5 @@ export async function deleteGame(id){
 
     }
 }
+
+// ----------------------------------- GAME COMMENTS --------------------------------------------------------------------

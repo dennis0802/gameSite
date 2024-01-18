@@ -2,7 +2,7 @@ html
     head 
         link(rel='stylesheet', type='text/css', href='/static/css/style.css')
         link(rel='icon', type='image/x-icon', href='/static/img/favicon.ico')
-        title Under Construction
+        title #{user}'s Account
     body 
         div#navbar
             a#logo(href='/')
@@ -25,7 +25,7 @@ html
                 br
                 br
             button 
-                a(class="button buttonTheme" href='/changePassword') Change Password  
+                a(class="button buttonTheme" href='/editAccount?user=' + user) Edit Account    
             br
             br
             if !isAdmin

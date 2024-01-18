@@ -23,4 +23,7 @@ html
             h2 Timeline
             p=game.timeline
             h2 Review
-            p=game.thoughts
+            if game.thoughts
+                p=game.thoughts
+            else
+                p No review.

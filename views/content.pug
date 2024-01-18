@@ -13,9 +13,8 @@ html
                     a.active(href='/games') Games
                 else
                     a(href='/games') Games
-                if isOnUsers
-                    a.active(href='/accountPage') Your Account
-                else if loggedIn
+
+                if loggedIn
                     a(href='/accountPage') Your Account
                 else 
                     a(href='/login') Login
@@ -57,9 +56,9 @@ html
                             td=val.email
                             td=val.userType
                             td 
-                                a(href='/editUser?id=' + val._id) Edit
+                                a(href='/resetUser?userId=' + val._id) Reset
                             td 
-                                a(href='/deleteUser?id=' + val._id) Delete 
+                                a(href='/deleteUser?userId=' + val._id) Delete 
                                 
             if isAdmin && isGame
                 br

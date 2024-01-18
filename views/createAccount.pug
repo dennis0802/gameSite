@@ -11,7 +11,7 @@ html
                 a(href='/') Home
                 a(href='/games') Games
                 if loggedIn
-                    a(href='/accountPage') Your Account
+                    a.active(href='/accountPage') Your Account
                 else 
                     a.active(href='/login') Login
         div#content
@@ -21,9 +21,12 @@ html
                 ul
                     each val in errors 
                         li.error=val
-            a(href="/login") Back to Login Menu
-            br
-            br
+            if !isEdit
+                a(href="/login") Back to Login Menu
+            else 
+                a(href="/accountPage") Back to Account
+                p
+                    b If you DO NOT want to change your password and/or security question, leave the fields blank/as their default values.
             form(method="post")
                 label(for="username") Username should be between 4-25 characters long and include at least one number. No special characters:
                 br
@@ -65,4 +68,7 @@ html
                 br
                 br
 
-                input(type="submit" name="submit" value="Create Account")
+                if isEdit 
+                    input(type="submit" name="submit" value="Update Account")
+                else
+                    input(type="submit" name="submit" value="Create Account")

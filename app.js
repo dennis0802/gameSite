@@ -4,7 +4,9 @@ import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import session from 'express-session';
 import bodyParser from 'body-parser';
-import { insertUser, findUser, getUserType, findUserQuestion, updateUserPassword, insertGame, getAllGames, getAllUsers, findGameById, updateGame, deleteGame } from './src/db_functions.js';
+//import flash from 'express-flash';
+import { insertUser, findUser, getUserType, findUserQuestion, updateUserPassword, insertGame, 
+         getAllGames, getAllUsers, findGameById, updateGame, deleteGame, findUserById, deleteUser, updateUser } from './src/db_functions.js';
 import { isPasswordInvalid, isUserNameInvalid, verifyPasswordLogin, isEmailInvalid, isUserNameUnique, isEmailUnique, encryptAnswer, verifyAnswer, isGameEntryInvalid, isGameNameUnique } from './src/verification_functions.js';
 
 const app = express();
@@ -20,6 +22,7 @@ app.use(session({
     resave: false,  // don't save session if unmodified
     saveUninitialized: false  // don't create session until something stored
 }))
+//app.use(flash);
 
 // ROUTES
 app.get('/', (req, res) => {
@@ -74,14 +77,7 @@ app.get('/users', (req, res) => {
 
 app.get('/login', (req, res) => {
     if(req.session.loggedInAs){
-        getUserType(req.session.loggedInAs).then((result) => {
-            if(result === "User"){
-                return res.render('accountPage.pug', {user:req.session.loggedInAs, isAdmin: true});
-            }
-            else{
-                return res.render('accountPage.pug', {user:req.session.loggedInAs, isAdmin: false});
-            }
-        })
+        res.redirect("/accountPage")
     }
     else{
         res.render('login.pug', {title: "Login Page"})
@@ -109,7 +105,8 @@ app.post('/loginUser', (req, res) => {
         verifyPassword().then(() => {
             if(verified){
                 req.session.loggedInAs = req.body.username;
-                res.render('accountPage.pug', {user:req.session.loggedInAs, isAdmin:false});
+                req.session.admin = false;
+                res.redirect('/accountPage');
             }
             else{
                 res.render('loginUser.pug', {title: "Login User", loginMessage: "Login User", error:"Incorrect username or password.", username:req.body.username})
@@ -121,7 +118,7 @@ app.post('/loginUser', (req, res) => {
 
 app.get('/loginAdmin', (req, res) => {
     if(req.session.loggedInAs){
-        res.render('accountPage.pug', {user:req.session.loggedInAs, isAdmin: true});
+        res.redirect('/accountPage');
     }
     res.render('loginUser.pug', {title: "Login Admin", loginMessage: "Login Admin"})
 })
@@ -141,7 +138,7 @@ app.post('/loginAdmin', (req, res) => {
             if(verified){
                 req.session.loggedInAs = req.body.username;
                 req.session.admin = true;
-                res.render('accountPage.pug', {user:req.session.loggedInAs, isAdmin: true});
+                res.redirect("/accountPage")
             }
             else{
                 res.render('loginUser.pug', {title: "Login Admin", loginMessage: "Login Admin", error:"Incorrect username or password.", username:req.body.username})
@@ -153,14 +150,7 @@ app.post('/loginAdmin', (req, res) => {
 
 app.get('/createAccount', (req, res) => {
     if(req.session.loggedInAs){
-        getUserType(req.session.loggedInAs).then((result) => {
-            if(result === "User"){
-                return res.render('accountPage.pug', {user:req.session.loggedInAs, isAdmin: false});
-            }
-            else{
-                return res.render('accountPage.pug', {user:req.session.loggedInAs, isAdmin: true});
-            }
-        })
+        return res.redirect("/accountPage")
     }
 
     res.render('createAccount.pug', {title: "Create Account", errors:null, username:""})
@@ -233,7 +223,8 @@ app.post('/createAccount', (req, res) => {
             
                         // Redirect to account homepage and login
                         req.session.loggedInAs = req.body.username;
-                        res.render('accountPage.pug', {user:req.session.loggedInAs});
+                        req.session.admin = false;
+                        res.redirect("/accountPage")
                     })
                 }
             })
@@ -246,14 +237,7 @@ app.get('/accountPage', (req, res) => {
         res.redirect("/");
     }
     else{
-        getUserType(req.session.loggedInAs).then((result) => {
-            if(result === "User"){
-                return res.render('accountPage.pug', {user:req.session.loggedInAs, isAdmin: false});
-            }
-            else{
-                return res.render('accountPage.pug', {user:req.session.loggedInAs, isAdmin: true});
-            }
-        })
+        res.render('accountPage.pug', {user:req.session.loggedInAs, isAdmin: req.session.admin});
     }
 })
 
@@ -380,7 +364,7 @@ app.post('/forgot', (req, res) => {
 
 app.get('/addGame', (req, res) => {
     if(req.session.loggedInAs && req.session.admin){
-        res.render('addGames.pug', {title: "Add Game", loggedIn:req.session.loggedInAs})
+        res.render('addContent.pug', {title: "Add Game", isGame: true, loggedIn:req.session.loggedInAs})
     }
     else{
         res.redirect('/games');  
@@ -406,7 +390,7 @@ app.post('/addGame', (req, res) => {
         }
 
         if(errors.length !== 0){
-            res.render('addGames.pug', {title: "Add Game", loggedIn:req.session.loggedInAs, name:req.body.name, start:req.body.start, end:req.body.end, review:req.body.review, genre:req.body.genre, rating:req.body.rating, errors:errors})        
+            res.render('addContent.pug', {title: "Add Game", loggedIn:req.session.loggedInAs, isGame: true, name:req.body.name, start:req.body.start, end:req.body.end, review:req.body.review, genre:req.body.genre, rating:req.body.rating, errors:errors})        
         }
         else{
             // Create game
@@ -433,6 +417,10 @@ app.get('/viewGame', (req, res) => {
         }
 
         getResults().then(() => {
+            if(!game){
+                return res.redirect("/games");
+            }
+
             res.render('viewGame.pug', {title: game.name, game:game, loggedIn:req.session.loggedInAs});
         })
     }
@@ -449,9 +437,12 @@ app.get('/editGame', (req, res) => {
         }
 
         searchGame().then(() => {
+            if(!result){
+                return res.redirect('/games');
+            }
             let start = result.timeline.slice(0, 7);
             let end = result.timeline.slice(10, 17);
-            res.render('addGames.pug', {title: "Edit Game", loggedIn:req.session.loggedInAs, name:result.name, start:start, end:end, review:result.thoughts, genre:result.genre, rating:result.rating, errors:null, isEditing: true})
+            res.render('addContent.pug', {title: "Edit Game", loggedIn:req.session.loggedInAs, isGame:true, name:result.name, start:start, end:end, review:result.thoughts, genre:result.genre, rating:result.rating, errors:null, isEditing: true})
         })
     }
 })
@@ -475,7 +466,7 @@ app.post('/editGame', (req, res) => {
         }
 
         if(errors.length !== 0){
-            res.render('addGames.pug', {title: "Edit Game", loggedIn:req.session.loggedInAs, name:req.body.name, start:req.body.start, end:req.body.end, review:req.body.review, genre:req.body.genre, rating:req.body.rating, errors:errors})        
+            res.render('addContent.pug', {title: "Edit Game", loggedIn:req.session.loggedInAs, isGame:true, name:req.body.name, start:req.body.start, end:req.body.end, review:req.body.review, genre:req.body.genre, rating:req.body.rating, errors:errors})        
         }
         else{
             // Update and view game
@@ -496,7 +487,10 @@ app.get('/deleteGame', (req, res) => {
         }
 
         searchGame().then(() => {
-            res.render('deleteGame.pug', {title: "Delete Game", loggedIn:req.session.loggedInAs, name:result.name, result: result})
+            if(!result){
+                return res.redirect('/games');
+            }
+            res.render('deleteContent.pug', {title: "Delete Game", isGame: true, loggedIn:req.session.loggedInAs, name:result.name, result: result})
         })
     }
 })
@@ -507,15 +501,295 @@ app.post('/deleteGame', (req, res) => {
 })
 
 app.get('/addUser', (req, res) => {
-
+    if(req.session.loggedInAs && req.session.admin){
+        res.render('addContent.pug', {title: "Add User", loggedIn:req.session.loggedInAs})
+    }
+    else if(req.session.admin){
+        res.redirect('/users');  
+    }
+    else{
+        res.redirect("/");
+    }
 })
 
-app.get('/editUser', (req, res) => {
-    
+app.post('/addUser', (req, res) => {
+    let errors=[]
+    if(!req.body.username || !req.body.password || !req.body.passwordConfirm || !req.body.answer){
+        errors.push("All fields must be filled out!");
+    }
+
+    if(req.body.secQuestion === 'Select a question...'){
+        errors.push("A security question must be selected.")
+    }
+
+    let usernameCheck = isUserNameInvalid(req.body.username)
+
+    if(usernameCheck){
+        errors = errors.concat(usernameCheck);
+    }
+
+    let emailCheck = isEmailInvalid(req.body.email);
+    if(emailCheck){
+        errors = errors.concat(emailCheck);
+    }
+
+    let result;
+    const checkUsernameUnique = async() => {
+        result = await isUserNameUnique(req.body.username);
+    }
+
+    checkUsernameUnique().then(() => {
+        if(result){
+            errors = errors.concat("A user with that username already exists.");
+        }
+
+        let emailResult;
+        const checkEmail = async() => {
+            emailResult = await isEmailUnique(req.body.email);
+        }
+
+        checkEmail().then(() => {
+            if(emailResult){
+                errors = errors.concat("A user with that email already exists.");
+            }
+
+            let passwordResult;
+            const checkPassword = async() => {
+                passwordResult = await isPasswordInvalid(req.body.password, req.body.passwordConfirm)
+            }
+
+            checkPassword().then(()=>{
+                if(passwordResult[0] !== '$'){
+                    errors = errors.concat(passwordResult);
+                }
+                
+                // Redirect to creation page with errors
+                if(errors.length !== 0){
+                    res.render('addContent.pug', {title: "Add User", errors:errors, loggedIn:req.session.loggedInAs, username:req.body.username, email:req.body.email})
+                }
+                else{
+                    let hashedAnswer;
+                    const encryptedAnswer = async() => {
+                        hashedAnswer = await encryptAnswer(req.body.answer);
+                    }
+
+                    encryptedAnswer().then(() => {
+                        // Create account
+                        insertUser(req.body.username, passwordResult, req.body.email, req.body.secQuestion, hashedAnswer, "User").catch(console.dir);
+            
+                        // Redirect to users
+                        res.redirect("/users")
+                    })
+                }
+            })
+        })
+    })
 })
 
+app.get('/resetUser', (req, res) => {
+    if(!req.query.userId && req.session.admin){
+        return res.redirect("/users");
+    }
+    else if(!req.session.admin){
+        return res.redirect("/");
+    }
+    else{
+        let result;
+        const searchUser = async() => {
+            result = await findUserById(req.query.userId);
+        }
+
+        searchUser().then(() => {
+            if(!result){
+                return res.redirect('/users');
+            }
+            res.render('deleteContent.pug', {title: "Reset User", isReset: true, loggedIn:req.session.loggedInAs, name:result.username, result: result})
+        })
+    }        
+})
+
+app.post('/resetUser', (req, res) => {
+    let hashedPassword;
+    const encryptedPassword = async() => {
+        hashedPassword = await encryptAnswer("defaultPassword123!");
+    }
+
+    encryptedPassword().then(() => {
+        let result;
+        const searchUser = async() => {
+            result = await findUserById(req.query.userId);
+        }
+
+        searchUser().then(() => {
+            if(result.username === req.session.loggedInAs){
+                return res.render('deleteContent.pug', {title: "Reset User", isReset: true, loggedIn:req.session.loggedInAs, name:result.username, result: result, errors:"You cannot reset an account while you are logged in!"})
+            }
+
+            // Update password
+            updateUserPassword(result.email, hashedPassword);
+            res.redirect("/users");
+        })
+    })
+})
+
+// Admin-initiated deletion
 app.get('/deleteUser', (req, res) => {
+    if(!req.query.userId && req.session.admin){
+        return res.redirect("/users");
+    }
+    else if(!req.session.admin){
+        return res.redirect("/");
+    }
+    else{
+        let result;
+        const searchUser = async() => {
+            result = await findUserById(req.query.userId);
+        }
+
+        searchUser().then(() => {
+            if(!result){
+                return res.redirect('/users');
+            }
+            res.render('deleteContent.pug', {title: "Delete User", isOnUser:true, loggedIn:req.session.loggedInAs, name:result.username, result: result})
+        })
+    }        
+})
+
+app.post('/deleteUser', (req, res) => {
+    let result;
+    const searchUser = async() => {
+        result = await findUserById(req.query.userId);
+    }
+
+    searchUser().then(() => {
+        if(result.username === req.session.loggedInAs){
+            return res.render('deleteContent.pug', {title: "Reset User", isReset: true, loggedIn:req.session.loggedInAs, name:result.username, result: result, errors:"You cannot reset an account while you are logged in!"})
+        }
+
+        // Delete user
+        deleteUser(req.query.userId);
+        res.redirect("/users");
+    })
+})
+
+// User-initiated deletion
+app.get('/deleteAccount', (req, res) => {
+    if(!req.session.loggedInAs){
+        return res.redirect("/");
+    }
+    else{
+        res.render('deleteContent.pug', {title: "Delete Your Account", selfRequest:true})
+    }
+})
+
+app.post('/deleteAccount', (req, res) => {
+    let result;
+    const searchUser = async() => {
+        result = await findUser(req.session.loggedInAs);
+    }
+
+    searchUser().then(() => {
+        // Delete user
+        deleteUser(result._id);
+        req.session.destroy();
+        res.redirect("/");
+    })
+})
+
+app.get('/editAccount', (req, res) => {
+    if(req.session.loggedInAs === req.query.user){
+        let result;
+        const searchUser = async() => {
+            result = await findUser(req.session.loggedInAs);
+        }
     
+        searchUser().then(() => {
+            res.render('createAccount.pug', {title:"Edit Account", isEdit: true, loggedIn:req.session.loggedInAs, username:result.username, email:result.email})
+        })
+    }
+    else if(req.session.loggedInAs){
+        res.redirect("/accountPage");
+    }
+    else{
+        res.redirect("/");
+    }
+})
+
+app.post("/editAccount", (req, res) => {
+    let errors=[]
+    let passwordFlag = req.body.password && req.body.passwordConfirm, questionFlag = req.body.secQuestion !== 'Select a question...' && req.body.answer;
+    let userType = req.session.admin ? "Admin" : "User";
+
+    if(!req.body.username || (!req.body.password && req.body.passwordConfirm) || (req.body.password && !req.body.passwordConfirm)){
+        errors.push("All fields must be filled out! Both password fields must be filled if changing your password");
+    }
+
+    if((req.body.secQuestion !== 'Select a question...' && !req.body.answer) || (req.body.secQuestion === 'Select a question...' && req.body.answer) ){
+        errors.push("A security question must be selected with a corresponding answer OR be left as defaults.")
+    }
+
+    let usernameCheck = isUserNameInvalid(req.body.username)
+
+    if(usernameCheck){
+        errors = errors.concat(usernameCheck);
+    }
+
+    let emailCheck = isEmailInvalid(req.body.email);
+    if(emailCheck){
+        errors = errors.concat(emailCheck);
+    }
+
+    let result;
+    const checkUsernameUnique = async() => {
+        result = await isUserNameUnique(req.body.username);
+    }
+
+    checkUsernameUnique().then(() => {
+        if(result && result.username !== req.body.username){
+            errors = errors.concat("A user with that username already exists.");
+        }
+
+        let emailResult;
+        const checkEmail = async() => {
+            emailResult = await isEmailUnique(req.body.email);
+        }
+
+        checkEmail().then(() => {
+            if(emailResult && result.email !== req.body.email){
+                errors = errors.concat("A user with that email already exists.");
+            }
+
+            let passwordResult;
+            const checkPassword = async() => {
+                passwordResult = await isPasswordInvalid(req.body.password, req.body.passwordConfirm)
+            }
+
+            checkPassword().then(()=>{
+                if(passwordResult[0] !== '$' && passwordFlag){
+                    errors = errors.concat(passwordResult);
+                }
+                
+                // Redirect to creation page with errors
+                if(errors.length !== 0){
+                    res.render('createAccount.pug', {title:"Create Account", errors:errors, username:req.body.username, email:req.body.email})
+                }
+                else{
+                    let hashedAnswer;
+                    const encryptedAnswer = async() => {
+                        hashedAnswer = await encryptAnswer(req.body.answer);
+                    }
+
+                    encryptedAnswer().then(() => {
+                        // Update account
+                        updateUser(result._id, req.body.username, passwordResult, req.body.email, req.body.secQuestion, hashedAnswer, userType, passwordFlag, questionFlag).catch(console.dir);
+            
+                        // Redirect to account homepage
+                        res.redirect("/accountPage")
+                    })
+                }
+            })
+        })
+    })    
 })
 
 // Run the server
