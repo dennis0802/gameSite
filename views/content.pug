@@ -9,27 +9,58 @@ html
                 img(src='/static/img/logo.png', width=60, height=40)
             div#navbar-right
                 a(href='/') Home
-                a.active(href='/games') Games
-                if loggedIn
+                if isGame
+                    a.active(href='/games') Games
+                else
+                    a(href='/games') Games
+                if isOnUsers
+                    a.active(href='/accountPage') Your Account
+                else if loggedIn
                     a(href='/accountPage') Your Account
                 else 
                     a(href='/login') Login
         div#content
             table
-                tr 
-                    th Name 
-                    th Genre
-                    th Rating 
-                    th Timeline
-                    th
-                    th
-                tr 
-                    td content here
-                    td content here 
-                    td content here 
-                    td content here
-                    td Edit 
-                    td Delete
+                if isGame
+                    tr 
+                        th Name 
+                        th Genre
+                        th Rating 
+                        th Timeline
+                        if isAdmin
+                            th
+                            th
+                else if isOnUsers
+                        th Username
+                        th Email
+                        th User Type
+                        th
+                        th
+
+                if isGame
+                    each val in rows  
+                        tr 
+                            td
+                                a(href='/viewGame?gameId=' + val._id) #{val.name}
+                            td=val.genre 
+                            td #{val.rating}/5 
+                            td=val.timeline
+                            if isAdmin
+                                td 
+                                    a(href='/editGame?gameId=' + val._id) Edit
+                                td 
+                                    a(href='/deleteGame?gameId=' + val._id) Delete
+                else if isOnUsers 
+                    each val in rows 
+                        tr 
+                            td=val.username 
+                            td=val.email
+                            td=val.userType
+                            td 
+                                a(href='/editUser?id=' + val._id) Edit
+                            td 
+                                a(href='/deleteUser?id=' + val._id) Delete 
+                                
             if isAdmin && isGame
                 br
                 br

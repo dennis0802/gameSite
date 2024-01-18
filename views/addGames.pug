@@ -1,0 +1,68 @@
+html 
+    head 
+        link(rel='stylesheet', type='text/css', href='/static/css/style.css')
+        link(rel='icon', type='image/x-icon', href='/static/img/favicon.ico')
+        title=title 
+    body 
+        div#navbar
+            a#logo(href='/')
+                img(src='/static/img/logo.png', width=60, height=40)
+            div#navbar-right
+                a(href='/') Home
+                a.active(href='/games') Games
+                if loggedIn
+                    a(href='/accountPage') Your Account
+                else 
+                    a(href='/login') Login
+        div#content
+            h1=title
+            if errors
+                p.error Please correct the following errors before re-submitting!
+                ul
+                    each val in errors 
+                        li.error=val
+            a.active(href='/games') Back to Games
+            br
+            br
+            form(method="post")
+                label(for="name") Game Name:
+                br
+                input(type="text", name="name", value=name)
+                br
+                br
+
+                label(for="genre") Genre:
+                br
+                input(type="text", name="genre", value=genre)
+                br
+                br
+
+                label(for="rating") Rating:
+                br
+                input(type="number", name="rating", value=rating, min=0, max=5)
+                br
+                br
+
+                label(for="start") Start Month and Year (YYYY-MM):
+                br
+                input(type="text", name="start", value=start)
+                br
+                br
+
+                label(for="end") End Month and Year (YYYY-MM OR leave blank for ongoing):
+                br
+                input(type="text", name="end", value=end)
+                br
+                br
+
+                label(for="review") Thoughts:
+                br
+                textarea(id="review", name="review", rows="10", cols="50")
+                    | #{review}
+                br
+                br
+
+                if isEditing 
+                    input(type="submit" name="submit" value="Edit Game")
+                else
+                    input(type="submit" name="submit" value="Add Game")

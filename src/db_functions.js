@@ -1,4 +1,32 @@
+import { ObjectId } from 'mongodb';
 import { client } from './dbconnect.js';
+
+// ----------------------------------- USERS --------------------------------------------------------------------
+
+// Get all users
+export function getAllUsers(){
+    try{
+        const database = client.db("game_site");
+        const users = database.collection("users");
+        let list;
+        const findUsers = async() => {
+            list = await users.find().toArray((err, result) => {
+            if(err){
+                return null;
+            }
+            return result;
+            });
+        }
+
+        let result = findUsers().then(() =>{
+            return list;
+        })
+        return result;
+    }
+    finally{
+
+    }
+}
 
 // Insert a user
 export async function insertUser(username, password, email, question, answer, userType){
@@ -21,6 +49,7 @@ export async function insertUser(username, password, email, question, answer, us
     }
 }
 
+// Update password
 export async function updateUserPassword(email, password){
     try{
         const database = client.db("game_site");
@@ -76,6 +105,25 @@ export async function findUserByEmail(email){
     }
 }
 
+export async function findUserQuestion(email){
+    try{
+        const database = client.db("game_site");
+        const users = database.collection("users");
+
+        // Query for the user
+        const query = {email: email};
+        const options = {
+            projection: {_id: 0, question: 1, answer: 1},
+        }
+
+        const user = await users.findOne(query, options);
+        return user;
+    }
+    finally{
+        //await client.close();
+    }
+}
+
 export async function getUserType(username){
     try{
         const database = client.db("game_site");
@@ -95,21 +143,136 @@ export async function getUserType(username){
     }
 }
 
-export async function findUserQuestion(email){
+// ----------------------------------- GAMES --------------------------------------------------------------------
+
+export function getAllGames(){
     try{
         const database = client.db("game_site");
-        const users = database.collection("users");
-
-        // Query for the user
-        const query = {email: email};
-        const options = {
-            projection: {_id: 0, question: 1, answer: 1},
+        const games = database.collection("games");
+        let list;
+        const findGames = async() => {
+            list = await games.find().toArray((err, result) => {
+            if(err){
+                return null;
+            }
+            return result;
+            });
         }
 
-        const user = await users.findOne(query, options);
-        return user;
+        let result = findGames().then(() =>{
+            return list;
+        })
+        return result;
     }
     finally{
+
+    }
+}
+
+// Insert a game
+export async function insertGame(name, genre, rating, start, end, thoughts){
+    try{
+        let timeline = start + " - " + end;
+        const database = client.db("game_site");
+        const games = database.collection("games");
+        const doc = {
+            name: name,
+            genre: genre,
+            rating: rating,
+            timeline: timeline,
+            thoughts: thoughts,
+        }
+
+        const result = await games.insertOne(doc);
+        console.log(`A document was inserted with id ${result.insertedId}`)
+    } finally {
         //await client.close();
+    }
+}
+
+// Find a game by name
+export async function findGameByName(name){
+    try{
+        const database = client.db("game_site");
+        const games = database.collection("games");
+
+        // Query for the game
+        const query = {name:name}
+        const options = {
+            projection: {_id: 0, name: 1}
+        }
+
+        const game = await games.findOne(query, options);
+        return game;
+    }
+    finally{
+
+    }
+}
+
+// Find game by id
+export async function findGameById(id){
+    try{
+        const database = client.db("game_site");
+        const games = database.collection("games");
+        let objectId = new ObjectId(id);
+
+        // Query for the game
+        const query = {_id: objectId}
+        const options = {
+            projection: {_id: 0, name: 1, genre:1, rating:1, timeline:1, thoughts:1}
+        }
+
+        const game = await games.findOne(query, options);
+        return game;
+    }
+    finally{
+
+    }
+}
+
+// Update game
+export async function updateGame(id, name, genre, rating, start, end, thoughts){
+    try{
+        const database = client.db("game_site");
+        const games = database.collection("games");
+
+        let objectId = new ObjectId(id);
+        let timeline = start + " - " + end;
+        const result = await games.updateOne(
+            {"_id": objectId},
+            { $set: {
+                "name" : name,
+                "genre" : genre,
+                "rating" : rating,
+                "timeline" : timeline,
+                "thoughts" : thoughts,
+            }}
+        )
+        console.log(result);
+    }
+    finally{
+
+    }
+}
+
+export async function deleteGame(id){
+    try{
+        const database = client.db("game_site");
+        const games = database.collection("games");
+
+        let objectId = new ObjectId(id);
+        const query = {_id: objectId}
+        const result = await games.deleteOne(query)
+
+        if(result.deletedCount === 1){
+            console.log("A document has been deleted.");
+        }
+        else{
+            console.log("No match.")
+        }
+    }
+    finally{
+
     }
 }

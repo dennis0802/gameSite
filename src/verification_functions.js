@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import { findUser, findUserByEmail } from './db_functions.js';
+import { findUser, findUserByEmail, findGameByName } from './db_functions.js';
 
 export const isPasswordInvalid = async function(password, passwordConfirmation){
     let errors=[];
@@ -113,8 +113,6 @@ export const isEmailInvalid = function(email){
         errors.push("Email must be a valid email address!");
     }
 
-    // Check uniqueness
-
     if(errors.length !== 0){
         return errors;
     }
@@ -158,4 +156,38 @@ export const verifyAnswer = async function(answer, hashFound){
     })
 
     return answerExists;
+}
+
+export const isGameEntryInvalid = function(name, genre, start, end){
+    let errors = [];
+
+    if(!name || !genre || !start){
+        errors.push("Name, genre, and start date must be filled out!");
+    }
+
+    let date = /([0-9]{4})-(0[1-9]|1[0-2])/;
+    // Start date should match a date pattern
+    let validDate = date.test(start);
+
+    if(!validDate){
+        errors.push("Start date is invalid!");
+    }
+
+    // End date should match date or blank
+    validDate = date.test(end);
+    if(!validDate && end){
+        errors.push("End date is invalid!");
+    }
+
+    if(errors.length !== 0){
+        return errors;
+    }
+    return false;
+}
+
+export const isGameNameUnique = async function(name){
+    let result = await findGameByName(name).then(res => {
+        return res;
+    })
+    return result;
 }
