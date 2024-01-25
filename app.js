@@ -6,7 +6,7 @@ import session from 'express-session';
 import bodyParser from 'body-parser';
 //import flash from 'express-flash';
 import { insertUser, findUser, getUserType, findUserQuestion, updateUserPassword, insertGame, 
-         getAllGames, getAllUsers, findGameById, updateGame, deleteGame, findUserById, deleteUser, updateUser } from './src/db_functions.js';
+         getAllGames, getAllUsers, findGameById, updateGame, deleteGame, findUserById, deleteUser, updateUser, toggleMuting } from './src/db_functions.js';
 import { isPasswordInvalid, isUserNameInvalid, verifyPasswordLogin, isEmailInvalid, isUserNameUnique, isEmailUnique, encryptAnswer, verifyAnswer, isGameEntryInvalid, isGameNameUnique } from './src/verification_functions.js';
 
 const app = express();
@@ -22,7 +22,7 @@ app.use(session({
     resave: false,  // don't save session if unmodified
     saveUninitialized: false  // don't create session until something stored
 }))
-//app.use(flash);
+//app.use(flash());
 
 // ROUTES
 app.get('/', (req, res) => {
@@ -470,7 +470,7 @@ app.post('/editGame', (req, res) => {
         }
         else{
             // Update and view game
-            updateGame(req.query.gameId, encodeURIComponent(req.body.name), encodeURIComponent(req.body.genre), req.body.rating, req.body.start, req.body.end, encodeURIComponent(req.body.review)).catch(console.dir);
+            updateGame(req.query.gameId, req.body.name, req.body.genre, req.body.rating, req.body.start, req.body.end, req.body.review).catch(console.dir);
             res.redirect('/viewGame?gameId=' + req.query.gameId)
         }
     })
@@ -790,6 +790,29 @@ app.post("/editAccount", (req, res) => {
             })
         })
     })    
+})
+
+app.get('/muteUser', (req, res) => {
+    if(!req.query.userId && req.session.admin){
+        return res.redirect("/users");
+    }
+    else if(!req.session.admin){
+        return res.redirect("/");
+    }
+    else{
+        let result;
+        const searchUser = async() => {
+            result = await findUserById(req.query.userId);
+        }
+
+        searchUser().then(() => {
+            if(!result){
+                return res.redirect('/users');
+            }
+           toggleMuting(req.query.userId, !result.isMuted);
+           res.redirect("/users");
+        })
+    }    
 })
 
 // Run the server

@@ -35,6 +35,7 @@ html
                         th User Type
                         th
                         th
+                        th
 
                 if isGame
                     each val in rows  
@@ -55,6 +56,14 @@ html
                             td=val.username 
                             td=val.email
                             td=val.userType
+
+                            if val.isMuted 
+                                td
+                                    a(href='/muteUser?userId=' + val._id) Muted
+                            else 
+                                td
+                                    a(href='/muteUser?userId=' + val._id) Unmuted
+
                             td 
                                 a(href='/resetUser?userId=' + val._id) Reset
                             td 

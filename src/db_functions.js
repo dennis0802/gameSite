@@ -10,7 +10,7 @@ export function getAllUsers(){
         const users = database.collection("users");
         let list;
         const findUsers = async() => {
-            list = await users.find().toArray((err, result) => {
+            list = await users.find().sort({userType:1}).toArray((err, result) => {
             if(err){
                 return null;
             }
@@ -40,6 +40,7 @@ export async function insertUser(username, password, email, question, answer, us
             question: question,
             email: email,
             answer: answer,
+            isMuted: false
         }
 
         const result = await users.insertOne(doc);
@@ -153,7 +154,7 @@ export async function findUserById(id){
         // Query for the game
         const query = {_id: objectId}
         const options = {
-            projection: {_id: 0, username:1, email:1}
+            projection: {_id: 0, username:1, email:1, isMuted: 1}
         }
 
         const user = await users.findOne(query, options);
@@ -185,7 +186,7 @@ export async function deleteUser(id){
     }
 }
 
-// Update game
+// Update user
 export async function updateUser(id, username, password, email, question, answer, userType, passwordFlag, questionFlag){
     try{
         const database = client.db("game_site");
@@ -235,6 +236,25 @@ export async function updateUser(id, username, password, email, question, answer
     }
 }
 
+export async function toggleMuting(id, mutingStatus){
+    try{
+        const database = client.db("game_site");
+        const users = database.collection("users");
+
+        let objectId = new ObjectId(id);
+        const result = await users.updateOne(
+            {"_id": objectId},
+            { $set: {
+                "isMuted": mutingStatus,
+            }}
+        )
+        console.log(result);
+    }
+    finally{
+
+    }
+}
+
 // ----------------------------------- GAMES --------------------------------------------------------------------
 
 export function getAllGames(){
@@ -243,7 +263,7 @@ export function getAllGames(){
         const games = database.collection("games");
         let list;
         const findGames = async() => {
-            list = await games.find().toArray((err, result) => {
+            list = await games.find().sort({timeline:1}).toArray((err, result) => {
             if(err){
                 return null;
             }
