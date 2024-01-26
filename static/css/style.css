@@ -119,6 +119,10 @@ input[type=submit]:hover {
     background-color: #233C67;
 }
 
+.success{
+    color: #006600
+}
+
 .error{
     color:#FF0000
 }

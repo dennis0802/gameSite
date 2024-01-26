@@ -75,7 +75,7 @@ export async function findUser(username, userType="All"){
         // Query for the user
         const query = userType === "All" ? {username: username} : {username: username, userType: userType};
         const options = {
-            projection: {_id: 1, username: 1, password: 1, email: 1},
+            projection: {_id: 1, username: 1, password: 1, email: 1, isMuted: 1},
         }
 
         const user = await users.findOne(query, options);
@@ -180,6 +180,39 @@ export async function deleteUser(id){
         else{
             console.log("No match.")
         }
+    }
+    finally{
+
+    }
+}
+
+// Login user and update last login field
+export async function updateLastLogin(username){
+    try{
+        const database = client.db("game_site");
+        const users = database.collection("users");
+        let today = new Date();
+        let month = today.getMonth()+1;
+        let day = today.getDate();
+        let minutes = today.getMinutes();
+        let seconds = today.getSeconds();
+
+        let monthText = month < 10 ? "0" + month : month;
+        let dayText = day < 10 ? "0" + day : day;
+        let minuteText = minutes < 10 ? "0" + minutes : minutes;
+        let secondText = seconds < 10 ? "0" + seconds : seconds;
+
+        let date = today.getFullYear() + '-' + monthText + '-' + dayText;
+        let time = today.getHours() + ":" + minuteText + ":" + secondText;
+        let timestamp = date + ' ' + time;
+
+        const result = await users.updateOne(
+            {"username": username},
+            { $set: {
+                "lastLogin": timestamp
+            }}
+        )
+        console.log(result);
     }
     finally{
 
@@ -390,3 +423,91 @@ export async function deleteGame(id){
 }
 
 // ----------------------------------- GAME COMMENTS --------------------------------------------------------------------
+// Get all posts for a specific game
+export async function getGameComments(gameId){
+    try{
+        const database = client.db("game_site");
+        const comments = database.collection("comments");
+        let gameObjectId = new ObjectId(gameId);
+        let list;
+        const query = {gameId: gameObjectId};
+        const options = {
+            projection: {_id: 0, user: 1, subject: 1, content: 1, timePosted:1},
+        }
+
+        const findComments = async() => {
+            list = await comments.find(query, options).toArray((err, result) => {
+            if(err){
+                return null;
+            }
+            return result;
+            });
+        }
+
+        let result = findComments().then(() =>{
+            return list;
+        })
+        return result;
+    }
+    finally{
+
+    }
+}
+
+// Insert a post
+export async function insertComment(username, gameId, subject, content){
+    try{
+        const database = client.db("game_site");
+        const comments = database.collection("comments");
+
+        let today = new Date();
+        let month = today.getMonth()+1;
+        let day = today.getDate();
+        let minutes = today.getMinutes();
+        let seconds = today.getSeconds();
+
+        let monthText = month < 10 ? "0" + month : month;
+        let dayText = day < 10 ? "0" + day : day;
+        let minuteText = minutes < 10 ? "0" + minutes : minutes;
+        let secondText = seconds < 10 ? "0" + seconds : seconds;
+
+        let date = today.getFullYear() + '-' + monthText + '-' + dayText;
+        let time = today.getHours() + ":" + minuteText + ":" + secondText;
+        let timestamp = date + ' ' + time;
+        let gameObjectId = new ObjectId(gameId);
+
+        const doc = {
+            user: username,
+            gameId: gameObjectId,
+            subject: subject,
+            content: content,
+            timePosted: timestamp
+        }
+
+        const result = await comments.insertOne(doc);
+        console.log(`A document was inserted with id ${result.insertedId}`)
+    } finally {
+        //await client.close();
+    }
+}
+
+export async function deleteAllPosts(gameId){
+    try{
+        const database = client.db("game_site");
+        const comments = database.collection("comments");
+
+        let objectId = new ObjectId(gameId);
+        const query = {gameId: objectId}
+        const result = await comments.deleteMany(query);
+
+        if(result.deletedCount > 1){
+            console.log("Documents have been deleted.");
+        }
+        else{
+            console.log("No match.")
+        }
+    }
+    finally{
+
+    }    
+}

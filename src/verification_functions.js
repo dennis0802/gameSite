@@ -191,3 +191,15 @@ export const isGameNameUnique = async function(name){
     })
     return result;
 }
+
+export const escapeHtml = function(text){
+    var map = {
+        '&' : '&amp;',
+        '>' : '&gt;',
+        '<' : '&lt;',
+        '"' : '&quot;',
+        "'" : '&#039;',        
+    }
+
+    return text.replace(/[&<>"']/g, function(m) {return map[m]; })
+}

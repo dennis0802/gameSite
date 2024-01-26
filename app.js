@@ -6,8 +6,9 @@ import session from 'express-session';
 import bodyParser from 'body-parser';
 //import flash from 'express-flash';
 import { insertUser, findUser, getUserType, findUserQuestion, updateUserPassword, insertGame, 
-         getAllGames, getAllUsers, findGameById, updateGame, deleteGame, findUserById, deleteUser, updateUser, toggleMuting } from './src/db_functions.js';
-import { isPasswordInvalid, isUserNameInvalid, verifyPasswordLogin, isEmailInvalid, isUserNameUnique, isEmailUnique, encryptAnswer, verifyAnswer, isGameEntryInvalid, isGameNameUnique } from './src/verification_functions.js';
+         getAllGames, getAllUsers, findGameById, updateGame, deleteGame, findUserById, deleteUser, updateUser, toggleMuting, updateLastLogin, insertComment, getGameComments, deleteAllPosts } from './src/db_functions.js';
+import { isPasswordInvalid, isUserNameInvalid, verifyPasswordLogin, isEmailInvalid, isUserNameUnique, isEmailUnique, 
+         encryptAnswer, verifyAnswer, isGameEntryInvalid, isGameNameUnique, escapeHtml } from './src/verification_functions.js';
 
 const app = express();
 const port = 3000;
@@ -38,7 +39,7 @@ app.get('/games', (req, res) => {
     getResults().then(() => {
         if(req.session.loggedInAs){
             getUserType(req.session.loggedInAs).then((result) => {
-                if(result === "User"){
+                if(result.userType === "User"){
                     res.render('content.pug', {title: "Games", loggedIn:req.session.loggedInAs, isGame:true, isAdmin:false, rows:results})
                 }
                 else{
@@ -104,6 +105,7 @@ app.post('/loginUser', (req, res) => {
 
         verifyPassword().then(() => {
             if(verified){
+                updateLastLogin(req.body.username);
                 req.session.loggedInAs = req.body.username;
                 req.session.admin = false;
                 res.redirect('/accountPage');
@@ -136,6 +138,7 @@ app.post('/loginAdmin', (req, res) => {
 
         verifyPassword().then(() => {
             if(verified){
+                updateLastLogin(req.body.username);
                 req.session.loggedInAs = req.body.username;
                 req.session.admin = true;
                 res.redirect("/accountPage")
@@ -390,11 +393,11 @@ app.post('/addGame', (req, res) => {
         }
 
         if(errors.length !== 0){
-            res.render('addContent.pug', {title: "Add Game", loggedIn:req.session.loggedInAs, isGame: true, name:req.body.name, start:req.body.start, end:req.body.end, review:req.body.review, genre:req.body.genre, rating:req.body.rating, errors:errors})        
+            res.render('addContent.pug', {title: "Add Game", loggedIn:req.session.loggedInAs, isGame: true, name:req.body.name, start:req.body.start, end:req.body.end, review:escapeHtml(req.body.review), genre:req.body.genre, rating:req.body.rating, errors:errors})        
         }
         else{
             // Create game
-            insertGame(encodeURIComponent(req.body.name), encodeURIComponent(req.body.genre), req.body.rating, req.body.start, req.body.end, encodeURIComponent(req.body.review)).catch(console.dir);
+            insertGame(req.body.name, req.body.genre, req.body.rating, req.body.start, req.body.end, escapeHtml(req.body.review)).catch(console.dir);
             res.redirect('/games'); 
         }
     })
@@ -421,8 +424,56 @@ app.get('/viewGame', (req, res) => {
                 return res.redirect("/games");
             }
 
-            res.render('viewGame.pug', {title: game.name, game:game, loggedIn:req.session.loggedInAs});
+            let user;
+            const searchUser = async() =>{
+                user = await findUser(req.session.loggedInAs);
+            }
+
+            searchUser().then(() => {
+                getGameComments(req.query.gameId).then((result) => {
+                    if(user){
+                        res.render('viewGame.pug', {title: game.name, game:game, loggedIn:req.session.loggedInAs, posts: result, muted:user.isMuted});
+                    }
+                    else{
+                        res.render('viewGame.pug', {title: game.name, game:game, loggedIn:req.session.loggedInAs, posts: result});
+                    }
+                })
+            })
         })
+    }
+})
+
+app.post('/viewGame', (req, res) => {
+    if(!req.body.subject || !req.body.contentPost){
+        let game;
+        const getResults = async() => {
+            game = await findGameById(req.query.gameId);
+        }
+
+        getResults().then(() => {
+            if(!game){
+                return res.redirect("/games");
+            }
+            let user;
+            const searchUser = async() =>{
+                user = await findUser(req.session.loggedInAs);
+            }
+
+            searchUser().then(() => {
+                getGameComments(req.query.gameId).then((result) => {
+                    if(user){
+                        res.render('viewGame.pug', {title: game.name, game:game, loggedIn:req.session.loggedInAs, posts: result, muted:user.isMuted, error:"All fields must be filled out!"});
+                    }
+                    else{
+                        res.render('viewGame.pug', {title: game.name, game:game, loggedIn:req.session.loggedInAs, posts: result, error:"All fields must be filled out!"});
+                    }
+                })
+            })
+        })
+    }
+    else{
+        insertComment(req.session.loggedInAs, req.query.gameId, req.body.subject, req.body.contentPost)
+        res.redirect('/viewGame?gameId=' + req.query.gameId);
     }
 })
 
@@ -466,11 +517,11 @@ app.post('/editGame', (req, res) => {
         }
 
         if(errors.length !== 0){
-            res.render('addContent.pug', {title: "Edit Game", loggedIn:req.session.loggedInAs, isGame:true, name:req.body.name, start:req.body.start, end:req.body.end, review:req.body.review, genre:req.body.genre, rating:req.body.rating, errors:errors})        
+            return res.render('addContent.pug', {title: "Edit Game", loggedIn:req.session.loggedInAs, isGame:true, name:req.body.name, start:req.body.start, end:req.body.end, review:escapeHtml(req.body.review), genre:req.body.genre, rating:req.body.rating, errors:errors})        
         }
         else{
             // Update and view game
-            updateGame(req.query.gameId, req.body.name, req.body.genre, req.body.rating, req.body.start, req.body.end, req.body.review).catch(console.dir);
+            updateGame(req.query.gameId, req.body.name, req.body.genre, req.body.rating, req.body.start, req.body.end, escapeHtml(req.body.review)).catch(console.dir);
             res.redirect('/viewGame?gameId=' + req.query.gameId)
         }
     })
@@ -496,8 +547,16 @@ app.get('/deleteGame', (req, res) => {
 })
 
 app.post('/deleteGame', (req, res) => {
-    deleteGame(req.query.gameId)
-    res.redirect("/games")
+    let result;
+    const searchGame = async() => {
+        result = await findGameById(req.query.gameId);
+    }
+
+    searchGame().then(() => {
+        deleteAllPosts(req.query.gameId);
+        deleteGame(req.query.gameId)
+        res.redirect("/games")
+    })
 })
 
 app.get('/addUser', (req, res) => {

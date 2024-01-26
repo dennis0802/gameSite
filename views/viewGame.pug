@@ -10,7 +10,10 @@ html
             div#navbar-right
                 a(href='/') Home
                 a(href='/games') Games
-                a(href='/login') Login
+                if loggedIn
+                    a(href='/accountPage') Your Account
+                else 
+                    a(href='/login') Login
         div#content
             h1=game.name
             a.active(href='/games') Back to Games
@@ -26,10 +29,47 @@ html
             if game.thoughts
                 p=game.thoughts
             else
-                p No review.
+                p No review available.
 
             h3 Discussion
-            if posts 
+            if error 
+                p.error Error! #{error}
+
+            if posts != 0
+                p Please contact a moderator if you need a post deleted.
+                table
+                    tr 
+                        th Subject 
+                        th User 
+                        th Post
+                        
+                    each val in posts 
+                        tr 
+                            td(style="width:200px") #{val.subject} 
+                            td(style="width:200px") Post made by #{val.user} on #{val.timePosted}
+                            td(style="vertical-align:middle")=val.content
 
             else 
                 p It's too quiet here... Start the discussion!
+            
+            br 
+            if loggedIn && muted 
+                p 
+                    b You have been muted due to inappropriate behaviour. Please contact an admin at muteAppeals@gamedb.com for further information.
+            else if loggedIn  
+                form(method="post")
+                    label(for="subject") Subject
+                    br
+                    input(type="text", name="subject", value=subject, maxlength=50)
+                    br
+                    br
+                    label(for="contentPost") Content:
+                    br
+                    textarea(id="contentPost", name="contentPost", rows="10", cols="50")
+                        | #{contentPost}
+                    br
+                    br
+                    input(type="submit" name="submit" value="Submit Post")
+            else 
+                p
+                    b You need to be logged in to contribute to the discussion!
