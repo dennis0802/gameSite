@@ -12,6 +12,9 @@ html
                 a(href='/games') Games
                 a.active(href='/accountPage') Your Account
         div#content
+            if messages.length > 0
+                each val in messages 
+                    p=val
             h1 #{user}'s Account
             if isAdmin 
                 p Welcome #{user}! Select the Games tab to add games and moderate the discussion! Select the Users tab to manage Users!

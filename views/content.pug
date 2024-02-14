@@ -19,6 +19,9 @@ html
                 else 
                     a(href='/login') Login
         div#content
+            if messages.length > 0
+                each val in messages 
+                    p=val
             table
                 if isGame
                     tr 

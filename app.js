@@ -4,7 +4,7 @@ import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import session from 'express-session';
 import bodyParser from 'body-parser';
-//import flash from 'express-flash';
+import flash from 'express-flash';
 import { insertUser, findUser, getUserType, findUserQuestion, updateUserPassword, insertGame, 
          getAllGames, getAllUsers, findGameById, updateGame, deleteGame, findUserById, deleteUser, updateUser, toggleMuting, updateLastLogin, insertComment, getGameComments, deleteAllPosts } from './src/db_functions.js';
 import { isPasswordInvalid, isUserNameInvalid, verifyPasswordLogin, isEmailInvalid, isUserNameUnique, isEmailUnique, 
@@ -23,11 +23,11 @@ app.use(session({
     resave: false,  // don't save session if unmodified
     saveUninitialized: false  // don't create session until something stored
 }))
-//app.use(flash());
+app.use(flash());
 
 // ROUTES
 app.get('/', (req, res) => {
-    res.render('index.pug', {title: "Games Database", loggedIn:req.session.loggedInAs})
+    res.render('index.pug', {title: "Games Database", loggedIn:req.session.loggedInAs, messages: req.flash('info')})
 })
 
 app.get('/games', (req, res) => {
@@ -43,7 +43,7 @@ app.get('/games', (req, res) => {
                     res.render('content.pug', {title: "Games", loggedIn:req.session.loggedInAs, isGame:true, isAdmin:false, rows:results})
                 }
                 else{
-                    res.render('content.pug', {title: "Games", loggedIn:req.session.loggedInAs, isGame:true, isAdmin:true, rows:results})
+                    res.render('content.pug', {title: "Games", loggedIn:req.session.loggedInAs, isGame:true, isAdmin:true, rows:results, messages: req.flash('info')})
                 }
             })
         }
@@ -66,7 +66,7 @@ app.get('/users', (req, res) => {
                     res.redirect("/");
                 }
                 else{
-                    res.render('content.pug', {title: "Users", loggedIn:req.session.loggedInAs, isOnUsers:true, isAdmin:true, rows:results})
+                    res.render('content.pug', {title: "Users", loggedIn:req.session.loggedInAs, isOnUsers:true, isAdmin:true, rows:results, messages: req.flash('info')})
                 }
             })
         }
@@ -240,7 +240,7 @@ app.get('/accountPage', (req, res) => {
         res.redirect("/");
     }
     else{
-        res.render('accountPage.pug', {user:req.session.loggedInAs, isAdmin: req.session.admin});
+        res.render('accountPage.pug', {user:req.session.loggedInAs, isAdmin: req.session.admin, messages:req.flash('info')});
     }
 })
 
@@ -249,7 +249,10 @@ app.get('/logout', (req, res) => {
         res.redirect("/");
     }
     else{
-        req.session.destroy();
+        req.session.loggedInAs = null;
+        req.session.admin = null;
+        
+        req.flash('info', "Successfully logged out!");
         res.redirect("/");
     }
 })
@@ -258,7 +261,9 @@ app.get('/forgot', (req, res) => {
     if(req.session.loggedIn){
         return res.redirect("/");
     }
-    req.session.destroy();
+    
+    req.session.loggedInAs = null;
+    req.session.admin = null;
     res.render('recovery.pug', {title:"Recover Password", errors:null, emailPhase:true})
 })
 
@@ -356,8 +361,10 @@ app.post('/forgot', (req, res) => {
                 encryptedPassword().then(() => {
                     // Update password
                     updateUserPassword(req.session.emailRecovery, hashedPassword);
-                    req.session.destroy();
-
+                    
+                    req.session.loggedInAs = null;
+                    req.session.admin = null;
+                    req.flash('info', "Successfully reset password!");
                     res.redirect("/");
                 })
             }
@@ -398,6 +405,7 @@ app.post('/addGame', (req, res) => {
         else{
             // Create game
             insertGame(req.body.name, req.body.genre, req.body.rating, req.body.start, req.body.end, escapeHtml(req.body.review)).catch(console.dir);
+            req.flash("Game successfully created!");
             res.redirect('/games'); 
         }
     })
@@ -432,10 +440,10 @@ app.get('/viewGame', (req, res) => {
             searchUser().then(() => {
                 getGameComments(req.query.gameId).then((result) => {
                     if(user){
-                        res.render('viewGame.pug', {title: game.name, game:game, loggedIn:req.session.loggedInAs, posts: result, muted:user.isMuted});
+                        res.render('viewGame.pug', {title: game.name, game:game, loggedIn:req.session.loggedInAs, posts: result, muted:user.isMuted, messages: req.flash('info')});
                     }
                     else{
-                        res.render('viewGame.pug', {title: game.name, game:game, loggedIn:req.session.loggedInAs, posts: result});
+                        res.render('viewGame.pug', {title: game.name, game:game, loggedIn:req.session.loggedInAs, posts: result, messages: req.flash('info')});
                     }
                 })
             })
@@ -473,6 +481,7 @@ app.post('/viewGame', (req, res) => {
     }
     else{
         insertComment(req.session.loggedInAs, req.query.gameId, req.body.subject, req.body.contentPost)
+        req.flash("info", "Message posted!");
         res.redirect('/viewGame?gameId=' + req.query.gameId);
     }
 })
@@ -522,6 +531,7 @@ app.post('/editGame', (req, res) => {
         else{
             // Update and view game
             updateGame(req.query.gameId, req.body.name, req.body.genre, req.body.rating, req.body.start, req.body.end, escapeHtml(req.body.review)).catch(console.dir);
+            req.flash('info', "Game successfully edited!")
             res.redirect('/viewGame?gameId=' + req.query.gameId)
         }
     })
@@ -555,6 +565,7 @@ app.post('/deleteGame', (req, res) => {
     searchGame().then(() => {
         deleteAllPosts(req.query.gameId);
         deleteGame(req.query.gameId)
+        req.flash("info", "Game successfully deleted!");
         res.redirect("/games")
     })
 })
@@ -636,6 +647,7 @@ app.post('/addUser', (req, res) => {
                         // Create account
                         insertUser(req.body.username, passwordResult, req.body.email, req.body.secQuestion, hashedAnswer, "User").catch(console.dir);
             
+                        req.flash("info", "User successfully created!");
                         // Redirect to users
                         res.redirect("/users")
                     })
@@ -686,6 +698,7 @@ app.post('/resetUser', (req, res) => {
 
             // Update password
             updateUserPassword(result.email, hashedPassword);
+            req.flash('info', 'User reset!');
             res.redirect("/users");
         })
     })
@@ -727,6 +740,7 @@ app.post('/deleteUser', (req, res) => {
 
         // Delete user
         deleteUser(req.query.userId);
+        req.flash('info', 'User successfully deleted!')
         res.redirect("/users");
     })
 })
@@ -750,7 +764,10 @@ app.post('/deleteAccount', (req, res) => {
     searchUser().then(() => {
         // Delete user
         deleteUser(result._id);
-        req.session.destroy();
+        req.session.loggedInAs = null;
+        req.session.admin = null;
+        req.flash('info', "Successfully deleted account!");
+        
         res.redirect("/");
     })
 })
@@ -843,6 +860,7 @@ app.post("/editAccount", (req, res) => {
                         updateUser(result._id, req.body.username, passwordResult, req.body.email, req.body.secQuestion, hashedAnswer, userType, passwordFlag, questionFlag).catch(console.dir);
             
                         // Redirect to account homepage
+                        req.flash('info', "Account info successfully updated!");
                         res.redirect("/accountPage")
                     })
                 }
@@ -869,6 +887,7 @@ app.get('/muteUser', (req, res) => {
                 return res.redirect('/users');
             }
            toggleMuting(req.query.userId, !result.isMuted);
+           req.flash('info', 'User muting toggled!')
            res.redirect("/users");
         })
     }    

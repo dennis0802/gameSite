@@ -13,9 +13,6 @@ html
                 a.active(href='/login') Login
         div#content
             h1 Select a Login
-            if messages.length > 0
-                each val in messages 
-                    p=val
             button 
                 a(class="button buttonTheme" href='/loginAdmin') Admin Login 
             br

@@ -15,6 +15,9 @@ html
                 else 
                     a(href='/login') Login
         div#content
+            if messages.length > 0
+                each val in messages 
+                    p=val
             h1=game.name
             a.active(href='/games') Back to Games
             
