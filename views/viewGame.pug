@@ -17,8 +17,11 @@ html
         div#content
             if messages.length > 0
                 each val in messages 
-                    p=val
+                    p.success=val
             h1=game.name
+            img(src=game.image, alt="Image could not be found.", width=480, height=270)
+            br
+            br
             a.active(href='/games') Back to Games
             
             h2 Genre: #{game.genre}

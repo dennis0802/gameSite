@@ -404,7 +404,7 @@ app.post('/addGame', (req, res) => {
         }
         else{
             // Create game
-            insertGame(req.body.name, req.body.genre, req.body.rating, req.body.start, req.body.end, escapeHtml(req.body.review)).catch(console.dir);
+            insertGame(req.body.name, req.body.genre, req.body.rating, req.body.image, req.body.start, req.body.end, escapeHtml(req.body.review)).catch(console.dir);
             req.flash("Game successfully created!");
             res.redirect('/games'); 
         }
@@ -470,10 +470,10 @@ app.post('/viewGame', (req, res) => {
             searchUser().then(() => {
                 getGameComments(req.query.gameId).then((result) => {
                     if(user){
-                        res.render('viewGame.pug', {title: game.name, game:game, loggedIn:req.session.loggedInAs, posts: result, muted:user.isMuted, error:"All fields must be filled out!"});
+                        res.render('viewGame.pug', {game:game, loggedIn:req.session.loggedInAs, posts: result, muted:user.isMuted, error:"All fields must be filled out!"});
                     }
                     else{
-                        res.render('viewGame.pug', {title: game.name, game:game, loggedIn:req.session.loggedInAs, posts: result, error:"All fields must be filled out!"});
+                        res.render('viewGame.pug', {game:game, loggedIn:req.session.loggedInAs, posts: result, error:"All fields must be filled out!"});
                     }
                 })
             })
@@ -502,7 +502,7 @@ app.get('/editGame', (req, res) => {
             }
             let start = result.timeline.slice(0, 7);
             let end = result.timeline.slice(10, 17);
-            res.render('addContent.pug', {title: "Edit Game", loggedIn:req.session.loggedInAs, isGame:true, name:result.name, start:start, end:end, review:result.thoughts, genre:result.genre, rating:result.rating, errors:null, isEditing: true})
+            res.render('addContent.pug', {title: "Edit Game", loggedIn:req.session.loggedInAs, isGame:true, name:result.name, start:start, end:end, review:result.thoughts, genre:result.genre, rating:result.rating, image:result.image, errors:null, isEditing: true})
         })
     }
 })
@@ -526,11 +526,11 @@ app.post('/editGame', (req, res) => {
         }
 
         if(errors.length !== 0){
-            return res.render('addContent.pug', {title: "Edit Game", loggedIn:req.session.loggedInAs, isGame:true, name:req.body.name, start:req.body.start, end:req.body.end, review:escapeHtml(req.body.review), genre:req.body.genre, rating:req.body.rating, errors:errors})        
+            return res.render('addContent.pug', {title: "Edit Game", loggedIn:req.session.loggedInAs, isGame:true, name:req.body.name, start:req.body.start, end:req.body.end, review:escapeHtml(req.body.review), genre:req.body.genre, rating:req.body.rating, image:req.body.image, errors:errors})        
         }
         else{
             // Update and view game
-            updateGame(req.query.gameId, req.body.name, req.body.genre, req.body.rating, req.body.start, req.body.end, escapeHtml(req.body.review)).catch(console.dir);
+            updateGame(req.query.gameId, req.body.name, req.body.genre, req.body.rating, req.body.image, req.body.start, req.body.end, escapeHtml(req.body.review)).catch(console.dir);
             req.flash('info', "Game successfully edited!")
             res.redirect('/viewGame?gameId=' + req.query.gameId)
         }

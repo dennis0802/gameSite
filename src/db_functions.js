@@ -315,7 +315,7 @@ export function getAllGames(){
 }
 
 // Insert a game
-export async function insertGame(name, genre, rating, start, end, thoughts){
+export async function insertGame(name, genre, rating, image, start, end, thoughts){
     try{
         let timeline = start + " - " + end;
         const database = client.db("game_site");
@@ -324,6 +324,7 @@ export async function insertGame(name, genre, rating, start, end, thoughts){
             name: name,
             genre: genre,
             rating: rating,
+            image: image,
             timeline: timeline,
             thoughts: thoughts,
         }
@@ -365,7 +366,7 @@ export async function findGameById(id){
         // Query for the game
         const query = {_id: objectId}
         const options = {
-            projection: {_id: 0, name: 1, genre:1, rating:1, timeline:1, thoughts:1}
+            projection: {_id: 0, name: 1, genre:1, rating:1, image:1, timeline:1, thoughts:1}
         }
 
         const game = await games.findOne(query, options);
@@ -377,7 +378,7 @@ export async function findGameById(id){
 }
 
 // Update game
-export async function updateGame(id, name, genre, rating, start, end, thoughts){
+export async function updateGame(id, name, genre, rating, image, start, end, thoughts){
     try{
         const database = client.db("game_site");
         const games = database.collection("games");
@@ -390,6 +391,7 @@ export async function updateGame(id, name, genre, rating, start, end, thoughts){
                 "name" : name,
                 "genre" : genre,
                 "rating" : rating,
+                "image" : image,
                 "timeline" : timeline,
                 "thoughts" : thoughts,
             }}

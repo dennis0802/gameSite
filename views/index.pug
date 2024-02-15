@@ -17,7 +17,7 @@ html
         div#content
             if messages.length > 0
                 each val in messages 
-                    p=val
+                    p.success=val
             h1 Games Database
             p This site acts as a way to track the games I have played during 2024, including thoughts and overview of the games.
             img(src='static/img/game.jpg', width=540, height=360)

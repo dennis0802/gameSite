@@ -21,7 +21,19 @@ html
         div#content
             if messages.length > 0
                 each val in messages 
-                    p=val
+                    p.success=val
+            if isAdmin && isGame
+                br
+                br
+                button
+                    a(class="button buttonTheme" href='/addGame') Add Game
+            else if isAdmin && isOnUsers
+                br
+                br
+                button
+                    a(class="button buttonTheme" href='/addUser') Add User 
+            br
+            br
             table
                 if isGame
                     tr 
@@ -45,6 +57,8 @@ html
                     each val in rows  
                         tr 
                             td
+                                img(src=val.image, alt="Image cannot be found", width=240, height=135)
+                                br
                                 a(href='/viewGame?gameId=' + val._id) #{val.name}
                             td=val.genre 
                             td #{val.rating}/5 
@@ -72,15 +86,4 @@ html
                             td 
                                 a(href='/resetUser?userId=' + val._id) Reset
                             td 
-                                a(href='/deleteUser?userId=' + val._id) Delete 
-                                
-            if isAdmin && isGame
-                br
-                br
-                button
-                    a(class="button buttonTheme" href='/addGame') Add Game
-            else if isAdmin && isOnUsers
-                br
-                br
-                button
-                    a(class="button buttonTheme" href='/addUser') Add User     
+                                a(href='/deleteUser?userId=' + val._id) Delete     
