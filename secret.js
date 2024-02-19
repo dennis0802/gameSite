@@ -1,0 +1,1 @@
+export const uri = process.env["ATLAS_URI"];

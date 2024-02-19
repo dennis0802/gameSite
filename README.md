@@ -5,7 +5,7 @@ A mock game forum site to experiment with creating a forum site using MongoDB, N
 
 ## Installation
 * Download the source code
-* Include a file called secret.js on the same level as app.js, the file should contain: export const uri \<your mongodb link here\>
+* Include your MongoDB link in an environment variable called ATLAS_URI
 * Install Express and NodeJS if it is not already on your system
 
 ## Usage
