@@ -1,7 +1,7 @@
-# Mock Game Forum Site
+# Game Tracker App
 
 ## Description
-A mock game forum site to experiment with creating a forum site using MongoDB, Node.js, and Express. Users can view and contribute to discussions about games while admins can manage the data and users on the site.
+A web applciation to track games played to experiment with creating a forum site using MongoDB, Node.js, and Express. Users can view and contribute to discussions about games while admins can manage the data and users on the site.
 
 ## Installation
 * Download the source code
